@@ -2,6 +2,7 @@ const express = require('express');
 const dotenv = require("dotenv").config();
 const connectDatabase = require("./config/db");
 const todoRoutes = require("./routes/todo");
+const userRoutes = require("./routes/user");
 const { errorHandler } = require("./middlewares/errorHandler");
 
 const app = express();
@@ -16,6 +17,9 @@ connectDatabase();
 
 //todo routes
 app.use("/api/todos", todoRoutes);
+
+//user routes
+app.use("/api/users", userRoutes);
 
 app.use(errorHandler);
 

@@ -1,5 +1,5 @@
 const asyncHandler = require('express-async-handler');
-const Todo = require("../models/Todo");
+const Todo = require("../models/todoModel");
 
 /**The reason is to use asyncHandler so that we don't have to hanlde 
 *the error manaully. We have defined a error handler middleware which will
@@ -14,7 +14,7 @@ const Todo = require("../models/Todo");
 const getTodos = asyncHandler(async (req, res) => {
     res.json({
         message: "Todos fetched successfully!",
-        data: await Todo.find()
+        data: await Todo.find({ user: req.user.id })
     });
 });
 
@@ -30,6 +30,7 @@ const createTodo = asyncHandler(async (req, res) => {
     }
 
    const newTodo = await Todo.create({
+        user: req.user.id,
         title: req.body.title,
         description: req.body.description,
         status: "pending"
@@ -50,7 +51,12 @@ const updateTodo = asyncHandler(async (req, res) => {
     const todo = await Todo.findById(req.params.id);
     if (!todo) {
         res.status(400);
-        res.json({message: "Todo isn't existed!"});
+        throw new Error("Todo isn't existed!");
+    }
+
+    if (todo?.user?.toString() !== req.user.id) {
+        res.status(400);
+        throw new Error("Not authorized");
     }
 
     const updatedTodo = await Todo.findByIdAndUpdate(
@@ -78,7 +84,12 @@ const deleteTodo = asyncHandler(async (req, res) => {
     let todo = await Todo.findById(req.params.id);
     if (!todo) {
         res.status(400);
-        res.json({message: "Todo isn't existed!"});
+        throw new Error("Todo isn't existed!");
+    }
+
+    if (todo?.user?.toString() !== req.user.id) {
+        res.status(401);
+        throw new Error("Not authorized");
     }
 
     await Todo.deleteOne({_id: req.params.id});
